@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#c8102e">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="description" content="双色球随机选三注：浏览器本地随机生成3注号码，手机竖屏可用，无账号、无后台、不消耗token。">
+<title>双色球随机选三注</title>
+<style>
+  :root{
+    --red:#c8102e; --red-dark:#a20d24; --blue:#1a5fb4;
+    --ink:#1f2328; --muted:#5c6570; --line:#e4e7eb; --bg:#f5f6f8; --card:#ffffff;
+    --gap:6px; --ball-max:46px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:16px; line-height:1.6; -webkit-text-size-adjust:100%; overflow-x:hidden;
+  }
+  main{max-width:760px;margin:0 auto;padding:14px 12px 28px}
+  header{padding:4px 2px 0}
+  h1{margin:0 0 4px;font-size:clamp(20px,5.4vw,26px);letter-spacing:.5px}
+  .sub{margin:0;color:var(--muted);font-size:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:12px 0;box-shadow:0 1px 2px rgba(16,22,26,.05)}
+  button{font-family:inherit}
+  .btn{display:block;width:100%;min-height:52px;border:0;border-radius:12px;font-size:18px;font-weight:700;cursor:pointer;touch-action:manipulation;-webkit-appearance:none;appearance:none;padding:12px 14px}
+  .btn-primary{background:var(--red);color:#fff}
+  .btn-primary:active{background:var(--red-dark)}
+  .btn-secondary{background:#eef1f4;color:var(--ink);font-weight:600;font-size:16px;min-height:46px;border:1px solid var(--line)}
+  .status{min-height:22px;margin:8px 0 0;font-size:15px;color:var(--muted)}
+  .status.ok{color:#0b6b3a}
+  .status.err{color:#b3261e}
+  .legend{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:14px;color:var(--muted);margin:0 0 4px}
+  .swatch{display:inline-block;width:14px;height:14px;border-radius:50%;vertical-align:-2px;margin-right:6px}
+  .swatch.r{background:var(--red)} .swatch.b{background:var(--blue)}
+  .ticket{padding:12px 0;border-top:1px dashed var(--line)}
+  .ticket:first-of-type{border-top:0;padding-top:8px}
+  .ticket-head{display:flex;justify-content:space-between;align-items:baseline;font-size:14px;color:var(--muted);margin-bottom:8px}
+  .ticket-head b{font-size:16px;color:var(--ink)}
+  .balls{display:flex;flex-wrap:nowrap;gap:var(--gap);align-items:center}
+  .ball{
+    flex:1 1 0; min-width:22px; max-width:var(--ball-max);
+    aspect-ratio:1/1; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-weight:700; font-size:clamp(13px,3.4vw,19px);
+    font-variant-numeric:tabular-nums; line-height:1;
+  }
+  .ball.r{background:var(--red);box-shadow:inset 0 -3px 0 rgba(0,0,0,.16)}
+  .ball.b{background:var(--blue);box-shadow:inset 0 -3px 0 rgba(0,0,0,.2)}
+  @supports not (aspect-ratio: 1/1){ .ball{aspect-ratio:auto;padding:10px 4px;border-radius:10px} }
+  .blue-line{font-size:15px;margin:12px 0 0;color:var(--muted)}
+  .blue-line b{color:var(--ink)}
+  .ver{font-size:14px;color:var(--muted);display:block;margin-top:8px}
+  textarea{
+    display:block;width:100%;min-height:112px;margin-top:8px;padding:10px;
+    border:1px solid var(--line);border-radius:10px;background:#fbfcfd;color:var(--ink);
+    font-family:ui-monospace,SFMono-Regular,Consolas,"Courier New",monospace;
+    font-size:14px;line-height:1.8;white-space:pre;resize:vertical;
+  }
+  .budget{background:#fff5f6;border:1px solid #f2d2d7;border-radius:12px;padding:12px 14px;margin:12px 0;font-size:16px;font-weight:600;color:#8c1023}
+  details{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:2px 14px;margin:12px 0}
+  summary{cursor:pointer;font-weight:700;font-size:16px;padding:12px 0;min-height:44px}
+  details ul{margin:4px 0 12px;padding-left:20px}
+  details li{margin:6px 0;font-size:15px}
+  code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:14px;background:#f2f4f6;padding:1px 5px;border-radius:5px}
+  footer{color:var(--muted);font-size:14px;margin-top:10px}
+  @media (max-width:380px){
+    :root{--gap:5px;--ball-max:42px}
+    main{padding:12px 10px 24px}
+    .card{padding:12px}
+    .btn{font-size:17px}
+  }
+  @media (min-width:900px){ body{font-size:17px} }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>双色球随机选三注</h1>
+    <p class="sub">红球 01–33 选 6 个，蓝球 01–16 选 1 个。随机在你的手机／电脑浏览器本机完成，不联网查号、不消耗 token。</p>
+  </header>
+
+  <section class="card">
+    <button id="pick" class="btn btn-primary" type="button">一键选三注</button>
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+  </section>
+
+  <section class="card" aria-label="选号结果">
+    <p class="legend"><span><span class="swatch r"></span>红球 6 个，升序</span><span><span class="swatch b"></span>蓝球 1 个，三注互不相同</span></p>
+    <div id="tickets"></div>
+    <p class="blue-line" id="blueline"></p>
+  </section>
+
+  <section class="card">
+    <button id="copy" class="btn btn-secondary" type="button">一键复制三注</button>
+    <p class="status" id="copystatus">复制不成功时，长按下方文本框全选，再点“复制”。</p>
+    <label class="ver" for="copytext">纯文本预览（可手动选择复制）</label>
+    <textarea id="copytext" readonly spellcheck="false" aria-label="三注号码纯文本"></textarea>
+  </section>
+
+  <p class="budget">本页3注共6元；加1注自选、1注机选，共10元。</p>
+
+  <details>
+    <summary>选号规则说明（规则版本 2026-10-27）</summary>
+    <ul>
+      <li>每次生成 3 注，每注 6 个红球 + 1 个蓝球。</li>
+      <li>红球从 01–33 随机选取，单注内不重复，展示时升序排列，号码统一补齐两位数。</li>
+      <li>蓝球从 01–16 随机选取，三注蓝球互不相同。</li>
+      <li>红球全范围开放，没有任何禁选号码。</li>
+      <li>不筛冷热、遗漏、奇偶比、大小比、区间比例；允许连号、同尾号，不刻意追求偏门或漂亮排列。</li>
+      <li>三注红球允许重叠；“避免过分相似”明确为：任意两注最多重叠 4 个红球。</li>
+      <li>三注完整组合不能重复。</li>
+      <li>随机数用浏览器 <code>crypto.getRandomValues</code> 加拒绝采样实现，避免取模偏差；先生成候选组合，再按跨注约束筛选。</li>
+      <li>每次生成后页面会自动做一次规则自检，不通过就不显示。</li>
+    </ul>
+    <p class="ver">这些规则只用于随机选号和适度分散，不能提高中奖概率，也不能预测开奖结果。</p>
+  </details>
+
+  <details>
+    <summary>购买原则</summary>
+    <ul>
+      <li>每期总预算 10 元：本页 3 注 + 自选 1 注 + 机选 1 注。</li>
+      <li>低频随缘；奖池不设购买门槛，不因奖池大或派奖增加预算。</li>
+      <li>本页不查开奖、不做走势分析、没有付费功能，也不展示奖金表。</li>
+    </ul>
+  </details>
+
+  <footer>纯静态页面：无账号、无数据库、无后台服务、无统计脚本。选号结果只留在当前浏览器，各设备之间不互通。</footer>
+</main>
+
+<script>
+/* SSQ_CORE_BEGIN */
+const SSQ = (function () {
+  'use strict';
+
+  const RED_MAX = 33;
+  const RED_COUNT = 6;
+  const BLUE_MAX = 16;
+  const TICKETS = 3;
+  const MAX_OVERLAP = 4;
+  const MAX_TRIES_PER_TICKET = 60;
+  const MAX_BATCH_TRIES = 200;
+
+  /* 均匀取 0..n-1：拒绝采样，避免 2^32 对 n 取模的偏差 */
+  function randUint32(n) {
+    if (!Number.isInteger(n) || n <= 0) throw new Error('randUint32: n 必须是正整数');
+    if (n === 1) return 0;
+    const limit = Math.floor(4294967296 / n) * n;
+    const buf = new Uint32Array(1);
+    for (;;) {
+      crypto.getRandomValues(buf);
+      if (buf[0] < limit) return buf[0] % n;
+    }
+  }
+
+  /* 从 1..maxNumber 里取 count 个互不相同的号码（部分 Fisher–Yates），返回升序数组 */
+  function sampleDistinct(maxNumber, count) {
+    if (count > maxNumber) throw new Error('sampleDistinct: count 超过号码池');
+    const pool = new Array(maxNumber);
+    for (let i = 0; i < maxNumber; i++) pool[i] = i + 1;
+    for (let i = 0; i < count; i++) {
+      const j = i + randUint32(maxNumber - i);
+      const tmp = pool[i]; pool[i] = pool[j]; pool[j] = tmp;
+    }
+    const picked = pool.slice(0, count);
+    picked.sort(function (a, b) { return a - b; });
+    return picked;
+  }
+
+  function overlapCount(a, b) {
+    const set = new Set(a);
+    let n = 0;
+    for (const v of b) if (set.has(v)) n++;
+    return n;
+  }
+
+  function attachBlues(tickets) {
+    const blues = sampleDistinct(BLUE_MAX, TICKETS);
+    for (let i = 0; i < tickets.length; i++) tickets[i].blue = blues[i];
+    return tickets;
+  }
+
+  /* 兜底：18 个互不相同的红球分成三组，跨注重叠必为 0 */
+  function fallbackBatch() {
+    const reds = sampleDistinct(RED_MAX, RED_COUNT * TICKETS);
+    const tickets = [];
+    for (let i = 0; i < TICKETS; i++) {
+      const group = reds.slice(i * RED_COUNT, (i + 1) * RED_COUNT).sort(function (a, b) { return a - b; });
+      tickets.push({ reds: group });
+    }
+    return attachBlues(tickets);
+  }
+
+  function generateTickets() {
+    for (let batch = 1; batch <= MAX_BATCH_TRIES; batch++) {
+      const tickets = [];
+      let failed = false;
+      for (let i = 0; i < TICKETS; i++) {
+        let placed = false;
+        for (let t = 0; t < MAX_TRIES_PER_TICKET; t++) {
+          const reds = sampleDistinct(RED_MAX, RED_COUNT);
+          let clash = false;
+          for (const prev of tickets) {
+            if (overlapCount(prev.reds, reds) > MAX_OVERLAP) { clash = true; break; }
+          }
+          if (!clash) { tickets.push({ reds: reds }); placed = true; break; }
+        }
+        if (!placed) { failed = true; break; }
+      }
+      if (!failed) return attachBlues(tickets);
+    }
+    return fallbackBatch();
+  }
+
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+
+  function formatTickets(tickets) {
+    return tickets.map(function (t, i) {
+      return '第' + (i + 1) + '注：红球 ' + t.reds.map(pad2).join(' ') + '｜蓝球 ' + pad2(t.blue);
+    }).join('\n');
+  }
+
+  function maxOverlap(tickets) {
+    let m = 0;
+    for (let a = 0; a < tickets.length; a++)
+      for (let b = a + 1; b < tickets.length; b++)
+        m = Math.max(m, overlapCount(tickets[a].reds, tickets[b].reds));
+    return m;
+  }
+
+  /* 硬约束自检：注数、红球数量/范围/不重复/升序、蓝球范围、三注蓝球互不相同、组合不重复、跨注重叠<=4 */
+  function isValidBatch(tickets) {
+    if (!Array.isArray(tickets) || tickets.length !== TICKETS) return { ok: false, reason: '注数不是3' };
+    const blueSet = new Set(), comboSet = new Set();
+    for (let i = 0; i < tickets.length; i++) {
+      const t = tickets[i];
+      if (!t || !Array.isArray(t.reds) || t.reds.length !== RED_COUNT) return { ok: false, reason: '第' + (i + 1) + '注红球不是6个' };
+      const seen = new Set();
+      for (let j = 0; j < t.reds.length; j++) {
+        const v = t.reds[j];
+        if (!Number.isInteger(v) || v < 1 || v > RED_MAX) return { ok: false, reason: '第' + (i + 1) + '注红球超出01-33' };
+        if (seen.has(v)) return { ok: false, reason: '第' + (i + 1) + '注红球有重复' };
+        if (j > 0 && t.reds[j - 1] > v) return { ok: false, reason: '第' + (i + 1) + '注红球未升序' };
+        seen.add(v);
+      }
+      if (!Number.isInteger(t.blue) || t.blue < 1 || t.blue > BLUE_MAX) return { ok: false, reason: '第' + (i + 1) + '注蓝球超出01-16' };
+      if (blueSet.has(t.blue)) return { ok: false, reason: '三注蓝球有重复' };
+      blueSet.add(t.blue);
+      const key = t.reds.join(',') + '|' + t.blue;
+      if (comboSet.has(key)) return { ok: false, reason: '有两注完全相同' };
+      comboSet.add(key);
+    }
+    for (let a = 0; a < tickets.length; a++)
+      for (let b = a + 1; b < tickets.length; b++)
+        if (overlapCount(tickets[a].reds, tickets[b].reds) > MAX_OVERLAP)
+          return { ok: false, reason: '第' + (a + 1) + '注与第' + (b + 1) + '注重叠超过4个红球' };
+    return { ok: true, reason: '', maxOverlap: maxOverlap(tickets) };
+  }
+
+  return {
+    RED_MAX: RED_MAX, RED_COUNT: RED_COUNT, BLUE_MAX: BLUE_MAX, TICKETS: TICKETS, MAX_OVERLAP: MAX_OVERLAP,
+    randUint32: randUint32, sampleDistinct: sampleDistinct, overlapCount: overlapCount,
+    generateTickets: generateTickets, fallbackBatch: fallbackBatch,
+    formatTickets: formatTickets, isValidBatch: isValidBatch, maxOverlap: maxOverlap, pad2: pad2
+  };
+})();
+/* SSQ_CORE_END */
+
+(function () {
+  'use strict';
+  const el = function (id) { return document.getElementById(id); };
+  const statusEl = el('status'), copyStatusEl = el('copystatus');
+  const ticketsEl = el('tickets'), blueEl = el('blueline'), copyTextEl = el('copytext');
+
+  function say(node, text, cls) {
+    node.textContent = text;
+    node.className = 'status' + (cls ? ' ' + cls : '');
+  }
+
+  function hasCrypto() {
+    return !!(window.crypto && typeof window.crypto.getRandomValues === 'function');
+  }
+
+  function render(tickets) {
+    let html = '';
+    for (let i = 0; i < tickets.length; i++) {
+      const t = tickets[i];
+      let balls = '';
+      for (let j = 0; j < t.reds.length; j++) balls += '<span class="ball r">' + SSQ.pad2(t.reds[j]) + '</span>';
+      balls += '<span class="ball b">' + SSQ.pad2(t.blue) + '</span>';
+      html += '<div class="ticket">'
+            + '<div class="ticket-head"><b>第' + (i + 1) + '注</b><span>红球 6 + 蓝球 1</span></div>'
+            + '<div class="balls">' + balls + '</div>'
+            + '</div>';
+    }
+    ticketsEl.innerHTML = html;
+    const blues = tickets.map(function (t) { return SSQ.pad2(t.blue); }).join('　');
+    blueEl.innerHTML = '<b>本次三个蓝球：' + blues + '</b><br>自选注可尽量避开这三个蓝球，机选随它。';
+    copyTextEl.value = SSQ.formatTickets(tickets);
+  }
+
+  /* 布局自检：只有真的放不下一行时才提示，正常情况不打扰 */
+  function layoutFits() {
+    try {
+      const rows = document.querySelectorAll('.balls');
+      for (let i = 0; i < rows.length; i++) {
+        if (rows[i].scrollWidth > rows[i].clientWidth + 1) return false;
+      }
+      return document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1;
+    } catch (e) { return true; }
+  }
+
+  function pick() {
+    if (!hasCrypto()) {
+      say(statusEl, '这个浏览器不支持 crypto.getRandomValues，请换较新的 Edge 或 Chrome。', 'err');
+      return;
+    }
+    let tickets;
+    try { tickets = SSQ.generateTickets(); }
+    catch (e) { say(statusEl, '生成失败：' + e.message, 'err'); return; }
+    const check = SSQ.isValidBatch(tickets);
+    if (!check.ok) { say(statusEl, '本批结果未通过规则自检（' + check.reason + '），请再点一次。', 'err'); return; }
+    render(tickets);
+    say(statusEl, '已生成新的三注（' + new Date().toLocaleTimeString('zh-CN', { hour12: false }) + '，自检通过）。', 'ok');
+    if (!layoutFits()) say(statusEl, '已生成三注，但当前窗口太窄、号码球无法一排放下：请把手机横过来，或在浏览器菜单里调小字体。', 'err');
+  }
+
+  function manualCopyFallback() {
+    try {
+      const ta = copyTextEl;
+      ta.focus();
+      ta.select();
+      if (ta.setSelectionRange) ta.setSelectionRange(0, ta.value.length);
+      return document.execCommand('copy') === true;
+    } catch (e) { return false; }
+  }
+
+  async function copyAll() {
+    const text = copyTextEl.value;
+    if (!text) { say(copyStatusEl, '请先点“一键选三注”。', 'err'); return; }
+    let done = false;
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        done = true;
+      }
+    } catch (e) { done = false; }
+    if (!done) done = manualCopyFallback();
+    if (done) say(copyStatusEl, '已复制到剪贴板，可直接粘贴。', 'ok');
+    else say(copyStatusEl, '自动复制不可用。请长按下方文本框全选，再手动复制。', 'err');
+  }
+
+  el('pick').addEventListener('click', pick);
+  el('copy').addEventListener('click', copyAll);
+  pick();
+})();
+</script>
+</body>
+</html>
